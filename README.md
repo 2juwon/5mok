@@ -2,7 +2,23 @@
 
 바로 하기: https://2juwon.github.io/5mok/
 
-컴퓨터(초급·중급·고급)와 두는 오목. 외부 라이브러리 없이 HTML 한 파일로 돌아갑니다.
+컴퓨터(초급·중급·고급)와 두거나, 한 기기로 둘이서, 각자 휴대폰으로 온라인 1대1. 화면은 외부 라이브러리 없이 HTML 한 파일입니다.
+
+## 대국 방식
+- **컴퓨터와**: 초급·중급·고급, 내 돌 흑·백·무작위, 무르기·힌트
+- **둘이서**: 한 기기로 번갈아. 이름 넣기, 무르기는 한 사람마다 따로 셈(방금 둔 사람 것만 한 수)
+- **온라인**: 빠른 참가 / 방 만들기(6자리 번호, 초대 링크 `#번호`) / 번호로 들어가기
+  - 방장이 대기실에서 규칙·판 크기·한 수 제한 시간(없음·15·30·60·120초, 지나면 시간패)·첫 판 돌(무작위·흑·백)·빠른 참가 공개를 정함
+  - 무르기는 상대가 '들어주기'를 눌러야 됨. 정해 둔 말 8가지 보내기
+  - 끊겨도 같은 브라우저로 돌아오면 같은 자리. 대국 중 끊긴 채 90초가 지나면 패, 대국 중 나가면 패
+  - 끝나면 둘 다 '한 판 더'를 누르면 색을 바꿔 다음 판. 방 안 성적이 쌓임
+  - 아티팩트 버전은 다른 서버에 접속할 수 없어 온라인이 꺼져 있음
+
+## 온라인 서버
+- `server/` — Cloudflare Workers + Durable Objects(무료 플랜, SQLite 저장소). Room = 방 하나(두 사람), Lobby = 빠른 참가 목록. 수는 서버가 규칙 엔진으로 다시 확인
+- 주소는 `config.json` → `node build.js`가 index.html에 넣음
+- `main`에 `server/`·`src/engine.js`·워크플로가 바뀌면 GitHub Actions '서버 배포'가 올림. 저장소 Secrets에 `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` 필요
+- 로컬 시험: `cd server && npx wrangler dev --var FAST_TEST:1` → `node server/test/online.test.mjs` / 화면 시험: `npx wrangler dev --port 8788` → `python3 test/online_browser.py`
 
 ## 규칙
 - **렌주룰**(기본): 흑만 3-3·4-4·장목(6목 이상) 금수, 백은 장목도 승
@@ -20,7 +36,7 @@
 - `src/engine.js` 규칙 엔진 `OM` (금수 판정, 승리, 무르기)
 - `src/ai.js` 컴퓨터 `OMAI` (11칸 모양 표 59,049개 미리 계산 → 점수, 탐색)
 - `src/ui.html` 화면
-- `node build.js` → `index.html`(GitHub Pages용) · `dist/omok.html`(아티팩트용)
+- `node build.js` → `index.html`(GitHub Pages용, 서버 주소 들어감) · `dist/omok.html`(아티팩트용, 온라인 꺼짐)
 
 ## 시험
 - `node test/rules.test.js` 규칙·컴퓨터 시험

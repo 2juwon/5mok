@@ -90,14 +90,38 @@ with sync_playwright() as p:
     page.goto(URL)
     page.click('.lv >> nth=2')
     page.click('#segSide button >> nth=1')
-    page.click('#segPreset button >> nth=1')
-    page.click('#segSize button >> nth=1')
+    page.click('#setupRules .rc-preset button >> nth=1')
+    page.click('#setupRules .rc-size button >> nth=1')
     page.click('#tl-showNum + button'); page.click('#tl-coords + button')
     page.click('#btnStart')
     r = play_full(page, 2, {'preset': 'normal', 'size': 19}, 'mid')
     print('19줄 고급(흑) 대 나(백·중급 실력):', r)
     page.screenshot(path=f'{OUT}/end-19.png')
-    worker = page.evaluate("typeof Worker")
+    ctx.close()
+
+    # 둘이서 (한 기기): 이름 넣고 끝까지, 무르기 한 수
+    ctx = b.new_context(viewport={'width': 400, 'height': 860})
+    page = ctx.new_page()
+    page.on('pageerror', lambda e: errors.append(str(e)))
+    page.goto(URL)
+    page.click('#modes button >> nth=1')
+    page.fill('#nameB', '아빠'); page.fill('#nameW', '지우')
+    page.click('#tl-confirm + button') if page.get_attribute('#tl-confirm + button', 'aria-pressed') == 'true' else None
+    page.click('#btnStart')
+    page.wait_for_timeout(200)
+    assert '아빠 차례' in page.inner_text('#status'), page.inner_text('#status')
+    for step in range(300):
+        if not page.is_hidden('#result'): break
+        mv = page.evaluate("() => { const o = window.__omok; const g = OM.newGame(o.rules); for (const i of o.moves) OM.play(g, i); return OMAI.think({ board: g.board, n: g.n, rules: g.rules, color: g.turn, level: 'mid', time: 100 }).move; }")
+        if step == 6:
+            page.click('#btnUndo'); page.wait_for_timeout(50)
+            assert len(page.evaluate('window.__omok.moves')) == 5, '둘이서 무르기는 한 수만'
+            continue
+        click_cell(page, mv)
+        page.wait_for_timeout(30)
+    page.wait_for_selector('#result .card')
+    print('둘이서:', page.inner_text('#result h2'), '/', page.inner_text('#status').split(chr(10))[0])
+    page.screenshot(path=f'{OUT}/local-end.png')
     ctx.close()
     b.close()
 
